@@ -1,0 +1,40 @@
+Subject: [PATCH] gui_test: read keys from /dev/input/linht-keys when linht-shelld runs
+
+linht-shelld grabs the raw keypad and forwards keys on the virtual device
+/dev/input/linht-keys. Use it when present, otherwise keep reading the keypad
+directly, so the image works with and without linht-shelld.
+
+When the key device goes away (linht-shelld stopped or crashed), the kernel
+drops the queued key releases and read() fails with ENODEV, so a held PTT
+would never be released. Leave the main loop then, so the cleanup puts the
+radio back to receive.
+
+Upstream-Status: Inappropriate [interim: the LVGL Radio app replaces gui_test, docs/architecture.md D30]
+---
+--- a/tests/gui_test/test.c
++++ b/tests/gui_test/test.c
+@@ -1,3 +1,4 @@
++#include <errno.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdint.h>
+@@ -893,7 +894,9 @@ int main(void)
+ 		fprintf(stderr, "Database initialization failed. Check permissions or path.\n");
+ 	}
+ 
+-	// keyboard
++	// keyboard: linht-shelld forwards the keypad on /dev/input/linht-keys; without it, read the keypad directly
++	if (access("/dev/input/linht-keys", R_OK) == 0)
++		kbd_path = "/dev/input/linht-keys";
+ 	if ((rval = kbd_init(&kbd, kbd_path)) != 0)
+ 	{
+ 		return rval;
+@@ -1072,6 +1075,8 @@ int main(void)
+ 		// check keypad events
+ 		struct input_event ev;
+ 		ssize_t n = read(kbd, &ev, sizeof(ev)); // non-blocking
++		if (n < 0 && errno == ENODEV) // linht-shelld is gone with linht-keys: no PTT release can arrive
++			break;
+ 		if (n == (ssize_t)sizeof(ev) && ev.type == EV_KEY)
+ 		{
+ 			if (ev.value == KEY_PRESS)

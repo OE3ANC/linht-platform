@@ -1,0 +1,42 @@
+Subject: [PATCH] matrix-keypad: report presses as 1, releases as 0
+
+The Rev C device tree marks the column, PTT and OPT GPIOs GPIO_ACTIVE_LOW, so
+gpiod_get_value() already returns 1 while a key is pressed. The driver inverted
+that once more, so every key reported 0 on press and 1 on release, and at load
+every key was reported as pressed. Report the logical value instead: standard
+evdev semantics for every reader (LVGL, raylib, linht-shelld). gui_test had
+worked around the inversion (KEY_PRESS 0) and needs the matching change.
+
+Upstream-Status: Pending [kept here until the LVGL Radio app replaces gui_test: upstream gui_test expects inverted keys, docs/architecture.md D30]
+---
+--- a/matrix-keypad.c
++++ b/matrix-keypad.c
+@@ -65,8 +65,8 @@
+         // udelay(1);
+ 
+         for (c = 0; c < MATRIX_COLS; c++) {
+-            // If a column reads low, the key is pressed
+-            if (gpiod_get_value(data->col_gpios->desc[c]) == 0) {
++            // The DT marks the columns GPIO_ACTIVE_LOW: the logical value is 1 while the key is pressed
++            if (gpiod_get_value(data->col_gpios->desc[c])) {
+                 current_key_state |= (1U << (r * MATRIX_COLS + c));
+             }
+         }
+@@ -100,7 +100,7 @@
+         ptt_now |= gpiod_get_value(data->ext_ptt_gpio);
+ 
+     if (ptt_now != data->ptt_last) {
+-        input_report_key(input_dev, KEY_P, !ptt_now);
++        input_report_key(input_dev, KEY_P, ptt_now);
+         data->ptt_last = ptt_now;
+         any_changed = true;
+     }
+@@ -109,7 +109,7 @@
+     if (data->opt_gpio) {
+         bool opt_now = gpiod_get_value(data->opt_gpio);
+         if (opt_now != data->opt_last) {
+-            input_report_key(input_dev, KEY_O, !opt_now);
++            input_report_key(input_dev, KEY_O, opt_now);
+             data->opt_last = opt_now;
+             any_changed = true;
+         }

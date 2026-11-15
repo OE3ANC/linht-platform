@@ -1,0 +1,29 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!--
+  Owner: linht-shelld. Bus name org.m17project.LinHT.Shell, object /org/m17project/LinHT/Shell.
+  Milestone-1 subset of architecture §7.2. Notify, InhibitIdle, CapturePTT and SetBadge are added
+  when their first user lands. Adding members is not a breaking change.
+  Apps come from manifests (architecture §9.2); milestone 1 reads id, name, icons, category and
+  the first component of type "ui".
+  Errors: org.m17project.LinHT.Shell1.Error.UnknownApp, .LaunchFailed
+-->
+<node name="/org/m17project/LinHT/Shell">
+  <interface name="org.m17project.LinHT.Shell1">
+    <!-- each app: id s, name s, category s, icon_small s, icon_large s (absolute paths, may be empty) -->
+    <method name="ListApps">
+      <arg name="apps" type="aa{sv}" direction="out"/>
+    </method>
+    <!-- stops the current foreground app and starts app_id -->
+    <method name="Launch">
+      <arg name="app_id" type="s" direction="in"/>
+    </method>
+    <!-- starts the home app (setting system.shell.home_app) -->
+    <method name="Home"/>
+    <!-- app id of the foreground app, "" while switching; changes via org.freedesktop.DBus.Properties.PropertiesChanged -->
+    <property name="Foreground" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true"/>
+    </property>
+  </interface>
+</node>

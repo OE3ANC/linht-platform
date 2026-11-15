@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-only
+id: org.m17project.linht.launcher
+name: Apps
+version: 0.1.0
+api: 1
+category: system
+components:
+  - id: ui
+    type: ui
+    exec: bin/linht-launcher

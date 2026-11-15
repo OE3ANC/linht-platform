@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-only
+namespace: system.display
+version: 1
+title: Display
+keys:
+  brightness:
+    type: int
+    default: 255
+    min: 32                      # 10 % duty was "almost off" on Rev C; never let a setting black out the screen
+    max: 255
+    step: 32
+    label: Brightness
+    description: Backlight level of the screen.
+    order: 1
+  timeout:
+    type: int
+    default: 15
+    choices: [0, 5, 10, 15, 30, 60]
+    unit: s
+    label: Screen off after
+    description: Seconds without a key press before the backlight turns off. 0 keeps it on.
+    order: 2

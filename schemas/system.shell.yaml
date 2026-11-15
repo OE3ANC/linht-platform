@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-only
+namespace: system.shell
+version: 1
+title: Shell
+keys:
+  home_app:
+    type: string                 # an installed UI app; if it isn't one, shelld uses the Radio app, then the launcher
+    default: org.m17project.linht.radio
+    label: Home app
+    description: App shown at power-on and when leaving the launcher.
+    order: 1

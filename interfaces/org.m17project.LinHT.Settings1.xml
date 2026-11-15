@@ -1,0 +1,48 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!--
+  Owner: linht-settingsd. Bus name org.m17project.LinHT.Settings, object /org/m17project/LinHT/Settings.
+  Semantics, types, access levels and errors: docs/settings-schema.md.
+-->
+<node name="/org/m17project/LinHT/Settings">
+  <interface name="org.m17project.LinHT.Settings1">
+    <method name="ListNamespaces">
+      <arg name="namespaces" type="as" direction="out"/>
+    </method>
+    <!-- keys: (name, properties) in schema order -->
+    <method name="Describe">
+      <arg name="namespace" type="s" direction="in"/>
+      <arg name="title" type="s" direction="out"/>
+      <arg name="keys" type="a(sa{sv})" direction="out"/>
+    </method>
+    <method name="Get">
+      <arg name="namespace" type="s" direction="in"/>
+      <arg name="key" type="s" direction="in"/>
+      <arg name="value" type="v" direction="out"/>
+    </method>
+    <method name="GetAll">
+      <arg name="namespace" type="s" direction="in"/>
+      <arg name="values" type="a{sv}" direction="out"/>
+    </method>
+    <method name="Set">
+      <arg name="namespace" type="s" direction="in"/>
+      <arg name="key" type="s" direction="in"/>
+      <arg name="value" type="v" direction="in"/>
+    </method>
+    <!-- all-or-nothing -->
+    <method name="SetMany">
+      <arg name="namespace" type="s" direction="in"/>
+      <arg name="values" type="a{sv}" direction="in"/>
+    </method>
+    <method name="Reset">
+      <arg name="namespace" type="s" direction="in"/>
+      <arg name="key" type="s" direction="in"/>
+    </method>
+    <!-- values: new effective values of the keys that changed (reset keys included, with their default) -->
+    <signal name="Changed">
+      <arg name="namespace" type="s"/>
+      <arg name="values" type="a{sv}"/>
+    </signal>
+  </interface>
+</node>

@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=LinHT settings service
+
+[Service]
+Type=dbus
+BusName=org.m17project.LinHT.Settings
+ExecStart=@CMAKE_INSTALL_FULL_LIBEXECDIR@/linht/linht-settingsd
+User=linht-settings
+StateDirectory=linht/settings
+Restart=on-failure
+# Needs nothing but its state directory and the system bus.
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

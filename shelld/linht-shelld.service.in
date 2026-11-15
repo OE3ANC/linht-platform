@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-only
+[Unit]
+Description=LinHT shell (foreground app, keypad routing, screen timeout)
+Wants=linht-settingsd.service
+After=linht-settingsd.service systemd-udevd.service
+
+[Service]
+# Ready once /dev/input/linht-keys exists. Runs as root: it grabs the keypad, creates the uinput
+# device, writes the backlights and starts and stops app units.
+# shortcut: root, until udev and polkit rules let a linht-shell user do this (phase 1, D19)
+Type=notify
+ExecStart=@CMAKE_INSTALL_FULL_LIBEXECDIR@/linht/linht-shelld
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

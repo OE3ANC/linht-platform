@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# The LCD's DRM device, whatever its card number (ui/linht-ui.c).
+SUBSYSTEM=="drm", KERNEL=="card[0-9]*", DRIVERS=="st7735r", SYMLINK+="dri/linht-lcd"

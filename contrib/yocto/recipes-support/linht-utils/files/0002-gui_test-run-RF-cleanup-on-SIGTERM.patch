@@ -1,0 +1,73 @@
+Subject: [PATCH] gui_test: run the RF cleanup on SIGTERM and exit
+
+systemd and linht-shelld stop gui_test with SIGTERM, which killed it without
+running its cleanup and could leave the transmitter keyed. Leave the main loop
+on SIGTERM so the existing cleanup runs, and release TX first if gui_test is
+stopped mid-transmission: EOT to the flowgraph and the ZMQ proxy, PA and red
+LED off.
+
+Also close the two ZMQ sockets the cleanup never closed. zmq_ctx_destroy()
+waits for every socket of the context, so every exit path hung there until
+systemd killed the process after its stop timeout.
+
+Upstream-Status: Inappropriate [interim: the LVGL Radio app replaces gui_test, docs/architecture.md D30]
+---
+--- a/tests/gui_test/test.c
++++ b/tests/gui_test/test.c
+@@ -10,6 +10,7 @@
+ #include <sys/mman.h>
+ #include <sys/wait.h>
+ #include <sys/prctl.h>
++#include <signal.h>
+ #include <linux/fb.h>
+ #include <time.h>
+ #include <m17.h>
+@@ -106,6 +107,14 @@
+ time_t esc_start;
+ bool esc_pressed = false;
+ 
++// set on SIGTERM (e.g. linht-shelld stopping the app): leave the main loop so the cleanup runs
++static volatile sig_atomic_t term_requested = 0;
++static void on_sigterm(int sig)
++{
++	(void)sig;
++	term_requested = 1;
++}
++
+ // spawning flowgraphs (python)
+ char *fg_path;
+ pid_t fg_pid;
+@@ -1008,7 +1017,8 @@
+ 	esc_start = time(NULL);
+ 
+ 	// main loop
+-	while (!WindowShouldClose())
++	signal(SIGTERM, on_sigterm);
++	while (!WindowShouldClose() && !term_requested)
+ 	{
+ 		// check if the flowgraph is still running
+ 		fg_check();
+@@ -1408,6 +1418,14 @@
+ 	UnloadFont(customFont38);
+ 	UnloadFont(customFont14);
+ 	kbd_cleanup(kbd);
++	// stopped mid-transmission: release TX first (ZMQ proxy back to RX, PA and red LED off)
++	if (vfo_a_tx)
++	{
++		zmq_send(zmq_fg_pub, eot_pmt, pmt_len, 0);
++		zmq_send(zmq_ptt_pub, eot_pmt, pmt_len, 0);
++	}
++	sx1255_pa_enable(false);
++	linht_ctrl_red_led_set(false);
+ 	sx1255_cleanup();
+ 
+ 	linht_ctrl_atten_cleanup(); // Cleanup attenuator control
+@@ -1418,6 +1436,8 @@
+ 	waitpid(fg_pid, NULL, 0);
+ 	zmq_unbind(zmq_ptt_pub, ptt_ipc);
+ 	zmq_close(zmq_ptt_pub);
++	zmq_close(zmq_fg_pub); // zmq_ctx_destroy() blocks forever while any socket is open
++	zmq_close(zmq_sub);
+ 	zmq_ctx_destroy(zmq_ctx);
+ 	cyaml_free(&cfg, &config_schema, conf, 0);
+ 	db_cleanup();

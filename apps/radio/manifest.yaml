@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# gui_test as the interim Radio app (D16). Its existing unit runs it (as root) until linht-radiod exists.
+id: org.m17project.linht.radio
+name: Radio
+version: 0.1.0
+api: 1
+category: radio
+components:
+  - id: ui
+    type: ui
+    unit: linht-gui-test.service

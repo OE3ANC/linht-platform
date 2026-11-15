@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
+/*
+ * LinHT platform additions for Rev C, included at the end of sbc-mcm-imx93.dts
+ * (see linux-compulab_6.%.bbappend). Licensed like the device tree it extends.
+ *
+ * Verified on hardware 2026-11-15 (docs/architecture.md §3): TPM3 channel 3 drives the
+ * LCD backlight, TPM4 channel 3 the keypad backlight. Both have normal polarity at
+ * 20 kHz and are fully on while the PWM is disabled.
+ */
+
+/ {
+	backlight_lcd: backlight-lcd {
+		compatible = "pwm-backlight";
+		pwms = <&tpm3 3 50000 0>;
+		brightness-levels = <0 255>;
+		num-interpolated-steps = <255>;
+		default-brightness-level = <255>;
+	};
+
+	leds-pwm {
+		compatible = "pwm-leds";
+
+		led-kbd {
+			label = "linht::kbd_backlight";
+			pwms = <&tpm4 3 50000 0>;
+			max-brightness = <255>;
+			default-state = "on";
+		};
+	};
+};
+
+/* The panel switches the backlight with DRM blanking. */
+&lpspi6 {
+	display@0 {
+		backlight = <&backlight_lcd>;
+	};
+};

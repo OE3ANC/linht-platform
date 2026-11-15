@@ -1,0 +1,25 @@
+Subject: [PATCH] gui_test: use standard evdev key values
+
+The LinHT keypad driver reported every key inverted (0 on press, 1 on release),
+and gui_test was written against that. With the driver fixed
+(meta-linht-hardware: matrix-keypad report presses as 1), a press is 1 again.
+Both changes must ship together: with only one of them, PTT would key the
+transmitter on release.
+
+Upstream-Status: Inappropriate [interim: the LVGL Radio app replaces gui_test, docs/architecture.md D30]
+---
+--- a/tests/gui_test/test.c
++++ b/tests/gui_test/test.c
+@@ -24,9 +24,9 @@
+ #include <sqlite3.h>
+ #include "settings.h"
+ 
+-// keymap states
+-#define KEY_PRESS 0
+-#define KEY_RELEASE 1
++// keymap states: standard evdev values (the fixed keypad driver reports 1 on press)
++#define KEY_PRESS 1
++#define KEY_RELEASE 0
+ 
+ #define arrlen(x) (sizeof(x) / sizeof(*x))
+ 

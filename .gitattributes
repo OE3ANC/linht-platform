@@ -1,0 +1,2 @@
+# Patches against upstream sources keep their line endings byte for byte (LinHT-utils uses CRLF)
+*.patch -text
